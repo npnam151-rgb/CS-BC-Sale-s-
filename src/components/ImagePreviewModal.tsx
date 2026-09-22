@@ -7,9 +7,7 @@ import {
   Check, 
   Copy, 
   AlertTriangle,
-  ZoomIn,
-  ExternalLink,
-  Globe
+  ZoomIn
 } from 'lucide-react';
 
 interface ImagePreviewModalProps {
@@ -76,26 +74,6 @@ export function ImagePreviewModal({
   };
 
   const isZalo = typeof navigator !== 'undefined' && /Zalo/i.test(navigator.userAgent);
-  const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
-
-  // Mở ảnh trực tiếp trong tab mới (giúp xem và tải ảnh trên Zalo mà không bị đơ app)
-  const handleOpenInNewTab = () => {
-    if (imageUrl) {
-      window.open(imageUrl, '_blank');
-    }
-  };
-
-  // Mở link trực tiếp sang Chrome đối với thiết bị Android trong Zalo
-  const handleOpenInChrome = () => {
-    try {
-      const host = window.location.host;
-      const path = window.location.pathname;
-      const search = window.location.search;
-      window.location.href = `intent://${host}${path}${search}#Intent;scheme=https;package=com.android.chrome;end`;
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   // Web Share API (especially useful on iOS / Android standalone browsers)
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
@@ -201,51 +179,29 @@ export function ImagePreviewModal({
               <Smartphone className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
             )}
             <div className="text-xs sm:text-sm text-amber-900 w-full">
-              <p className="font-bold">
-                {isZalo 
-                  ? 'Đang mở trong Zalo (Trình duyệt Zalo có thể bị đơ khi quét mã QR ảnh dài):' 
-                  : isBlockedWarning 
-                  ? 'Trình duyệt chặn tải xuống tự động! Hãy lưu trực tiếp:'
-                  : 'Hướng dẫn lưu ảnh vào điện thoại:'}
-              </p>
-              
-              <p className="mt-0.5 leading-relaxed text-amber-800">
-                👉 <strong>Chạm và giữ (long-press)</strong> vào ảnh bên dưới → chọn <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-bold text-amber-950">"Lưu vào Ảnh" (Save to Photos)</span> hoặc <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-bold text-amber-950">"Chia sẻ"</span>.
-              </p>
-
               {isZalo ? (
-                <div className="mt-2 pt-2 border-t border-amber-200/80 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      id="zalo-open-direct-button"
-                      type="button"
-                      onClick={handleOpenInNewTab}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Mở ảnh riêng (Khắc phục đơ Zalo)</span>
-                    </button>
-
-                    {isAndroid && (
-                      <button
-                        id="zalo-open-chrome-button"
-                        type="button"
-                        onClick={handleOpenInChrome}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors"
-                      >
-                        <Globe className="w-3.5 h-3.5" />
-                        <span>Mở sang Google Chrome</span>
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-amber-900 font-medium leading-relaxed">
-                    💡 <strong>Tại sao Zalo bị treo?</strong> Trình duyệt Zalo tự động quét mã QR trên ảnh. Báo cáo dài có nhiều ô chi tiết khiến Zalo quét bị quá tải CPU. Hãy bấm nút <strong>"Mở ảnh riêng"</strong> ở trên hoặc bấm dấu <strong>(•••)</strong> góc trên bên phải Zalo → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome).
+                <div>
+                  <p className="font-bold text-amber-950">
+                    Đang mở trong Zalo:
+                  </p>
+                  <p className="mt-0.5 text-amber-900 leading-relaxed">
+                    Vui lòng bấm dấu ba chấm <strong>(•••)</strong> ở góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để tải ảnh về máy.
                   </p>
                 </div>
               ) : (
-                <p className="text-[11px] text-amber-700 mt-1">
-                  (Trên máy tính: Nhấp chuột phải vào ảnh → chọn "Lưu hình ảnh thành..." hoặc bấm nút "Tải về máy")
-                </p>
+                <div>
+                  <p className="font-bold text-amber-950">
+                    {isBlockedWarning 
+                      ? 'Trình duyệt chặn tải xuống tự động! Hãy lưu trực tiếp:'
+                      : 'Hướng dẫn lưu ảnh vào điện thoại:'}
+                  </p>
+                  <p className="mt-0.5 leading-relaxed text-amber-800">
+                    👉 <strong>Chạm và giữ (long-press)</strong> vào ảnh bên dưới → chọn <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-bold text-amber-950">"Lưu vào Ảnh" (Save to Photos)</span> hoặc <span className="bg-amber-200/80 px-1.5 py-0.5 rounded font-bold text-amber-950">"Chia sẻ"</span>.
+                  </p>
+                  <p className="text-[11px] text-amber-700 mt-1">
+                    (Trên máy tính: Nhấp chuột phải vào ảnh → chọn "Lưu hình ảnh thành..." hoặc bấm nút "Tải về máy")
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -277,23 +233,11 @@ export function ImagePreviewModal({
         <div className="px-4 sm:px-6 py-3 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <ZoomIn className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="hidden sm:inline">Chất lượng cao PNG (Scale 1.25x tối ưu)</span>
-            <span className="sm:hidden">Ảnh sắc nét tối ưu</span>
+            <span className="hidden sm:inline">Chất lượng cao PNG</span>
+            <span className="sm:hidden">Ảnh sắc nét</span>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            {/* Direct Open Button */}
-            <button
-              id="modal-open-direct-footer-button"
-              type="button"
-              onClick={handleOpenInNewTab}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl transition-colors"
-              title="Mở ảnh trong tab mới"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span>Mở ảnh</span>
-            </button>
-
             {/* Share button (native Web Share or guided fallback) */}
             <button
               id="modal-share-button"

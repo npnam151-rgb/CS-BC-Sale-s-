@@ -293,31 +293,14 @@ export default function App() {
 
       {/* Zalo In-App Browser Guidance Banner */}
       {typeof navigator !== 'undefined' && /Zalo/i.test(navigator.userAgent) && (
-        <div className="bg-blue-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium shadow-xs">
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="bg-white text-blue-700 font-bold px-1.5 py-0.5 rounded text-[11px] shrink-0">
-                Zalo
-              </span>
-              <span className="leading-snug">
-                Trình duyệt Zalo dễ bị đơ khi chạm giữ ảnh. Bạn nên bấm <strong>(•••)</strong> góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để dùng mượt nhất.
-              </span>
-            </div>
-            {/Android/i.test(navigator.userAgent) && (
-              <button
-                type="button"
-                onClick={() => {
-                  try {
-                    window.location.href = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;package=com.android.chrome;end`;
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded text-xs transition-colors shrink-0"
-              >
-                Mở sang Chrome
-              </button>
-            )}
+        <div className="bg-blue-600 text-white px-4 py-2 text-xs sm:text-sm font-medium shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center gap-2">
+            <span className="bg-white text-blue-700 font-bold px-1.5 py-0.5 rounded text-[11px] shrink-0">
+              Zalo
+            </span>
+            <span className="leading-snug">
+              Vui lòng bấm dấu <strong>(•••)</strong> ở góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để tải ảnh về máy.
+            </span>
           </div>
         </div>
       )}
