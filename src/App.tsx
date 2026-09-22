@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { toPng } from 'html-to-image';
+import { toBlob } from 'html-to-image';
 import { 
   Download, 
   CheckCircle2, 
@@ -104,23 +104,55 @@ export default function App() {
     }
   };
 
+  const currentBlobUrlRef = useRef<string | null>(null);
+
+  // Tạo ảnh chất lượng cao dạng Blob Object URL (nhẹ, không làm đơ Zalo/di động)
+  const generateReportImageBlob = async (): Promise<{ blob: Blob; objectUrl: string } | null> => {
+    if (!previewRef.current) return null;
+    
+    // Thu hồi URL cũ để giải phóng bộ nhớ
+    if (currentBlobUrlRef.current) {
+      try {
+        URL.revokeObjectURL(currentBlobUrlRef.current);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    const isMobile = typeof navigator !== 'undefined' && (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Zalo/i.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    );
+
+    // pixelRatio 1.25 trên mobile tạo ảnh sắc nét ~1150px mà không bị tràn RAM gây đơ Zalo
+    const blob = await toBlob(previewRef.current, {
+      quality: 0.95,
+      pixelRatio: isMobile ? 1.25 : 1.5,
+      backgroundColor: '#ffffff',
+      skipFonts: true,
+      cacheBust: true,
+    });
+
+    if (!blob) return null;
+
+    const objectUrl = URL.createObjectURL(blob);
+    currentBlobUrlRef.current = objectUrl;
+    return { blob, objectUrl };
+  };
+
   // Mở Popup ảnh để chạm giữ lưu vào điện thoại
   const handleOpenModalPreview = async () => {
     if (!previewRef.current) return;
     try {
       setIsExporting(true);
-      const dataUrl = await toPng(previewRef.current, {
-        quality: 1.0,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        skipFonts: true,
-        cacheBust: true,
-      });
+      const result = await generateReportImageBlob();
+      if (!result) throw new Error('Không thể tạo ảnh');
+
       const dateStr = reportData.date || new Date().toISOString().split('T')[0];
       const reporterStr = reportData.reporter ? reportData.reporter.trim().replace(/\s+/g, '_') : 'Sale';
       const fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
 
-      setModalImageUrl(dataUrl);
+      setModalImageUrl(result.objectUrl);
       setModalFileName(fileName);
       setIsBlockedWarning(false);
       setIsModalOpen(true);
@@ -139,7 +171,7 @@ export default function App() {
     setExportSuccess(false);
     setSheetStatus('idle');
 
-    let generatedDataUrl: string | null = null;
+    let generatedObjectUrl: string | null = null;
     let fileName = '';
 
     try {
@@ -147,28 +179,23 @@ export default function App() {
       await saveToGoogleSheets(reportData);
 
       // Đợi một chút để UI cập nhật trạng thái
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // 2. Xuất ảnh chất lượng cao
-      const dataUrl = await toPng(previewRef.current, {
-        quality: 1.0,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        skipFonts: true,
-        cacheBust: true,
-      });
-      generatedDataUrl = dataUrl;
+      const result = await generateReportImageBlob();
+      if (!result) throw new Error('Không thể tạo ảnh');
+      generatedObjectUrl = result.objectUrl;
 
       const dateStr = reportData.date || new Date().toISOString().split('T')[0];
       const reporterStr = reportData.reporter ? reportData.reporter.trim().replace(/\s+/g, '_') : 'Sale';
       fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
 
-      setModalImageUrl(dataUrl);
+      setModalImageUrl(result.objectUrl);
       setModalFileName(fileName);
 
       // Kiểm tra môi trường di động / iframe hoặc browser chặn download
       const isMobile = typeof navigator !== 'undefined' && (
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Zalo/i.test(navigator.userAgent) || 
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
       );
       const isIframe = typeof window !== 'undefined' && window.self !== window.top;
@@ -177,7 +204,7 @@ export default function App() {
       try {
         const link = document.createElement('a');
         link.download = fileName;
-        link.href = dataUrl;
+        link.href = result.objectUrl;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -198,17 +225,14 @@ export default function App() {
     } catch (err) {
       console.error('Failed to export image', err);
       try {
-        if (!generatedDataUrl && previewRef.current) {
-          generatedDataUrl = await toPng(previewRef.current, {
-            quality: 1.0,
-            pixelRatio: 2,
-            backgroundColor: '#ffffff',
-            skipFonts: true,
-            cacheBust: true,
-          });
+        if (!generatedObjectUrl && previewRef.current) {
+          const fallback = await generateReportImageBlob();
+          if (fallback) {
+            generatedObjectUrl = fallback.objectUrl;
+          }
         }
-        if (generatedDataUrl) {
-          setModalImageUrl(generatedDataUrl);
+        if (generatedObjectUrl) {
+          setModalImageUrl(generatedObjectUrl);
           setModalFileName(fileName || 'BaoCao_SaleSi.png');
           setIsBlockedWarning(true);
           setIsModalOpen(true);
@@ -270,13 +294,30 @@ export default function App() {
       {/* Zalo In-App Browser Guidance Banner */}
       {typeof navigator !== 'undefined' && /Zalo/i.test(navigator.userAgent) && (
         <div className="bg-blue-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium shadow-xs">
-          <div className="max-w-7xl mx-auto flex items-center gap-2">
-            <span className="bg-white text-blue-700 font-bold px-1.5 py-0.5 rounded text-[11px] shrink-0">
-              Zalo
-            </span>
-            <span className="leading-snug">
-              Trình duyệt Zalo chặn tải ảnh và nút chia sẻ tự động. Bạn nên bấm dấu ba chấm <strong>(•••)</strong> ở góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để dùng mượt mà nhất.
-            </span>
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="bg-white text-blue-700 font-bold px-1.5 py-0.5 rounded text-[11px] shrink-0">
+                Zalo
+              </span>
+              <span className="leading-snug">
+                Trình duyệt Zalo dễ bị đơ khi chạm giữ ảnh. Bạn nên bấm <strong>(•••)</strong> góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để dùng mượt nhất.
+              </span>
+            </div>
+            {/Android/i.test(navigator.userAgent) && (
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    window.location.href = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;package=com.android.chrome;end`;
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded text-xs transition-colors shrink-0"
+              >
+                Mở sang Chrome
+              </button>
+            )}
           </div>
         </div>
       )}
