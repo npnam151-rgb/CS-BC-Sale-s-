@@ -3,10 +3,13 @@ import { toPng } from 'html-to-image';
 import { 
   Download, 
   CheckCircle2, 
-  AlertCircle
+  AlertCircle,
+  Eye,
+  Smartphone
 } from 'lucide-react';
 import { ReportForm } from './components/ReportForm';
 import { ReportPreview } from './components/ReportPreview';
+import { ImagePreviewModal } from './components/ImagePreviewModal';
 import { 
   SaleSiReportData, 
   DEFAULT_OUTLETS, 
@@ -39,6 +42,12 @@ export default function App() {
   const [exportSuccess, setExportSuccess] = useState(false);
   const [sheetStatus, setSheetStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const previewRef = useRef<HTMLDivElement>(null);
+
+  // Modal Popup states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [modalFileName, setModalFileName] = useState<string>('BaoCao_SaleSi.png');
+  const [isBlockedWarning, setIsBlockedWarning] = useState(false);
 
   const saveToGoogleSheets = async (data: SaleSiReportData) => {
     if (!GOOGLE_SHEET_WEBHOOK_URL) {
@@ -95,12 +104,43 @@ export default function App() {
     }
   };
 
+  // Mở Popup ảnh để chạm giữ lưu vào điện thoại
+  const handleOpenModalPreview = async () => {
+    if (!previewRef.current) return;
+    try {
+      setIsExporting(true);
+      const dataUrl = await toPng(previewRef.current, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        skipFonts: true,
+        cacheBust: true,
+      });
+      const dateStr = reportData.date || new Date().toISOString().split('T')[0];
+      const reporterStr = reportData.reporter ? reportData.reporter.trim().replace(/\s+/g, '_') : 'Sale';
+      const fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
+
+      setModalImageUrl(dataUrl);
+      setModalFileName(fileName);
+      setIsBlockedWarning(false);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error('Failed to generate image preview modal', err);
+      alert('Không thể tạo ảnh xem trước. Vui lòng thử lại.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleExportImage = async () => {
     if (!previewRef.current) return;
     
     setIsExporting(true);
     setExportSuccess(false);
     setSheetStatus('idle');
+
+    let generatedDataUrl: string | null = null;
+    let fileName = '';
 
     try {
       // 1. Lưu dữ liệu lên Google Sheets vào sheet "BC sale sỉ"
@@ -109,39 +149,71 @@ export default function App() {
       // Đợi một chút để UI cập nhật trạng thái
       await new Promise(resolve => setTimeout(resolve, 400));
       
-      // 2. Xuất ảnh
+      // 2. Xuất ảnh chất lượng cao
       const dataUrl = await toPng(previewRef.current, {
         quality: 1.0,
         pixelRatio: 2,
         backgroundColor: '#ffffff',
+        skipFonts: true,
+        cacheBust: true,
       });
+      generatedDataUrl = dataUrl;
 
-      const link = document.createElement('a');
       const dateStr = reportData.date || new Date().toISOString().split('T')[0];
       const reporterStr = reportData.reporter ? reportData.reporter.trim().replace(/\s+/g, '_') : 'Sale';
-      const fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
-      link.download = fileName;
-      link.href = dataUrl;
-      link.click();
+      fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
+
+      setModalImageUrl(dataUrl);
+      setModalFileName(fileName);
+
+      // Kiểm tra môi trường di động / iframe hoặc browser chặn download
+      const isMobile = typeof navigator !== 'undefined' && (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      );
+      const isIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+      let downloadTriggered = false;
+      try {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        downloadTriggered = true;
+      } catch (downloadErr) {
+        console.warn('Direct download link click failed or blocked:', downloadErr);
+        downloadTriggered = false;
+      }
+
+      // Nếu trình duyệt chặn tải xuống hoặc trên mobile/iframe (nơi download attribute không hoạt động để lưu vào Photos)
+      if (!downloadTriggered || isMobile || isIframe) {
+        setIsBlockedWarning(!downloadTriggered);
+        setIsModalOpen(true);
+      }
       
       setExportSuccess(true);
-      setTimeout(() => setExportSuccess(false), 5000);
+      setTimeout(() => setExportSuccess(false), 8000);
     } catch (err) {
       console.error('Failed to export image', err);
       try {
-        const dataUrl = await toPng(previewRef.current, {
-          quality: 1.0,
-          pixelRatio: 2,
-          backgroundColor: '#ffffff',
-        });
-        const link = document.createElement('a');
-        const dateStr = reportData.date || new Date().toISOString().split('T')[0];
-        const reporterStr = reportData.reporter ? reportData.reporter.trim().replace(/\s+/g, '_') : 'Sale';
-        const fileName = `BaoCao_SaleSi_${reporterStr}_${dateStr}.png`;
-        link.download = fileName;
-        link.href = dataUrl;
-        link.click();
-        setExportSuccess(true);
+        if (!generatedDataUrl && previewRef.current) {
+          generatedDataUrl = await toPng(previewRef.current, {
+            quality: 1.0,
+            pixelRatio: 2,
+            backgroundColor: '#ffffff',
+            skipFonts: true,
+            cacheBust: true,
+          });
+        }
+        if (generatedDataUrl) {
+          setModalImageUrl(generatedDataUrl);
+          setModalFileName(fileName || 'BaoCao_SaleSi.png');
+          setIsBlockedWarning(true);
+          setIsModalOpen(true);
+          setExportSuccess(true);
+        }
       } catch (innerErr) {
         alert('Có lỗi xảy ra khi xuất ảnh. Vui lòng thử lại.');
       }
@@ -152,48 +224,93 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* Header: Chỉ tên ứng dụng và nút xuất báo cáo */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
+      {/* Header: Tên ứng dụng và nút hành động */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
               Báo cáo Sale sỉ
             </h1>
             
-            <button
-              onClick={handleExportImage}
-              disabled={isExporting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isExporting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Đang xuất...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  <span>Xuất báo cáo</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                id="header-preview-modal-button"
+                onClick={handleOpenModalPreview}
+                disabled={isExporting}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                title="Mở popup ảnh để chạm và giữ lưu vào điện thoại"
+              >
+                <Eye className="w-4 h-4 text-indigo-600" />
+                <span>Xem ảnh (Popup)</span>
+              </button>
+
+              <button
+                id="header-export-button"
+                onClick={handleExportImage}
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isExporting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Đang xuất...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    <span>Xuất báo cáo</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Zalo In-App Browser Guidance Banner */}
+      {typeof navigator !== 'undefined' && /Zalo/i.test(navigator.userAgent) && (
+        <div className="bg-blue-600 text-white px-4 py-2.5 text-xs sm:text-sm font-medium shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center gap-2">
+            <span className="bg-white text-blue-700 font-bold px-1.5 py-0.5 rounded text-[11px] shrink-0">
+              Zalo
+            </span>
+            <span className="leading-snug">
+              Trình duyệt Zalo chặn tải ảnh và nút chia sẻ tự động. Bạn nên bấm dấu ba chấm <strong>(•••)</strong> ở góc trên bên phải → chọn <strong>"Mở bằng trình duyệt"</strong> (Safari / Chrome) để dùng mượt mà nhất.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-28 sm:pb-8">
         {/* Status Notification */}
         {exportSuccess && (
-          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 ${sheetStatus === 'error' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
-            {sheetStatus === 'error' ? <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" /> : <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
-            <div>
-              <p className="font-semibold text-sm">
-                {sheetStatus === 'error' 
-                  ? 'Đã tải ảnh thành công! (Lưu ý: Chưa gửi được dữ liệu lên Google Sheets)' 
-                  : 'Đã xuất ảnh báo cáo và lưu vào Google Sheets thành công!'}
-              </p>
+          <div className={`mb-6 p-4 rounded-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-4 ${sheetStatus === 'error' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
+            <div className="flex items-center gap-3">
+              {sheetStatus === 'error' ? <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" /> : <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
+              <div>
+                <p className="font-semibold text-sm">
+                  {sheetStatus === 'error' 
+                    ? 'Đã tạo ảnh thành công! (Lưu ý: Chưa gửi được dữ liệu lên Google Sheets)' 
+                    : 'Đã xuất ảnh báo cáo và lưu vào Google Sheets thành công!'}
+                </p>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Bạn có thể mở Popup ảnh để chạm giữ và chọn "Lưu vào Ảnh" (Save to Photos).
+                </p>
+              </div>
             </div>
+
+            {modalImageUrl && (
+              <button
+                id="banner-open-modal-button"
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold rounded-lg border border-slate-300 shadow-xs transition-colors"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Mở ảnh để lưu (Nhấn giữ)</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -213,9 +330,22 @@ export default function App() {
                 <h2 className="text-base font-bold text-slate-800">Bản xem trước ảnh báo cáo</h2>
                 <p className="text-xs text-slate-500">Hình ảnh hiển thị đúng như file PNG khi tải về</p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100">
-                Tự động cập nhật
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  id="preview-section-modal-button"
+                  type="button"
+                  onClick={handleOpenModalPreview}
+                  disabled={isExporting}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-md border border-slate-300 shadow-xs transition-colors"
+                  title="Mở ảnh dạng Popup để chạm giữ lưu vào máy"
+                >
+                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Mở popup lưu ảnh</span>
+                </button>
+                <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100">
+                  Tự động cập nhật
+                </span>
+              </div>
             </div>
             
             <div className="bg-slate-200 p-2 sm:p-4 rounded-xl sm:rounded-2xl overflow-x-auto shadow-inner border border-slate-300">
@@ -231,25 +361,46 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] z-30">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] z-30 flex items-center gap-2">
         <button
+          id="mobile-preview-modal-button"
+          type="button"
+          onClick={handleOpenModalPreview}
+          disabled={isExporting}
+          className="flex-1 flex justify-center items-center gap-1.5 px-3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
+        >
+          <Eye className="w-4 h-4 text-indigo-600" />
+          <span>Xem ảnh (Popup)</span>
+        </button>
+
+        <button
+          id="mobile-export-button"
           onClick={handleExportImage}
           disabled={isExporting}
-          className="w-full flex justify-center items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-base font-bold rounded-xl shadow-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex-2 flex justify-center items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isExporting ? (
             <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               <span>Đang xuất...</span>
             </>
           ) : (
             <>
-              <Download className="w-5 h-5" />
+              <Download className="w-4 h-4" />
               <span>Xuất báo cáo</span>
             </>
           )}
         </button>
       </div>
+
+      {/* Popup ảnh xem trước dạng Modal (Chạm giữ để lưu vào Ảnh) */}
+      <ImagePreviewModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        imageUrl={modalImageUrl}
+        fileName={modalFileName}
+        isBlockedWarning={isBlockedWarning}
+      />
     </div>
   );
 }
