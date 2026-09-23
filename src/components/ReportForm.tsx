@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   SaleSiReportData, 
   OutletItem, 
-  SAMPLE_SALE_SI_DATA, 
   DEFAULT_OUTLETS 
 } from '../types';
 import { 
@@ -12,7 +11,6 @@ import {
   TrendingUp, 
   Package, 
   FileText, 
-  Sparkles, 
   RotateCcw, 
   PlusCircle, 
   CheckCircle2, 
@@ -86,14 +84,6 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onChange({ ...SAMPLE_SALE_SI_DATA, date: data.date, reporter: data.reporter || SAMPLE_SALE_SI_DATA.reporter })}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded-lg transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Điền dữ liệu mẫu như ảnh
-          </button>
           <button
             type="button"
             onClick={() => onChange({
