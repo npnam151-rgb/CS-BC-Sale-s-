@@ -84,16 +84,14 @@ export const ReportPreview = forwardRef<HTMLDivElement, ReportPreviewProps>(
                 Tổng số điểm đến chăm sóc
               </div>
               <span className="text-xs font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
-                SL: {data.visitedOutletsCount || activeOutlets.length || '0'}
+                SL: {activeOutlets.length}
               </span>
             </div>
             <div className="text-sm text-slate-800 font-medium min-h-[42px] whitespace-pre-line leading-relaxed">
-              {data.visitedOutletsList ? (
-                data.visitedOutletsList.startsWith('Gồm:')
-                  ? data.visitedOutletsList
-                  : `Gồm: ${data.visitedOutletsList}`
+              {activeOutlets.length > 0 ? (
+                `Gồm: ${activeOutlets.map(o => o.restaurantName.trim()).join(', ')}`
               ) : (
-                <span className="text-slate-400 italic text-xs">Chưa có danh sách điểm</span>
+                <span className="text-slate-400 italic text-xs">Chưa có điểm bán nào được ghi nhận</span>
               )}
             </div>
           </div>

@@ -115,7 +115,6 @@ function doPost(e) {
           "Người báo cáo",
           "Điểm mở mới",
           "Phát sinh/ Đề xuất",
-          "Tổng số điểm đến chăm sóc",
           "Tổng số đơn đặt hàng"
         ];
         for (var i = 1; i <= 15; i++) {
@@ -126,16 +125,39 @@ function doPost(e) {
         sheet.setFrozenRows(1);
       }
       
-      // 2. GHI DỮ LIỆU CỦA BÁO CÁO SALE SỈ
-      row.push(
-        new Date(),
-        data.date || "",
-        data.reporter || "",
-        data.newOutlets || "",
-        data.issuesOrProposals || "",
-        data.visitedOutlets || "",
-        data.totalOrders || ""
-      );
+      // Kiểm tra nếu sheet cũ từng có cột "Tổng số điểm đến chăm sóc" để điền đúng cột
+      var hasOldVisitedCol = false;
+      if (sheet.getLastRow() > 0) {
+        var existingHeaders = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 10)).getValues()[0];
+        for (var h = 0; h < existingHeaders.length; h++) {
+          if (existingHeaders[h] && existingHeaders[h].toString().indexOf("chăm sóc") !== -1) {
+            hasOldVisitedCol = true;
+            break;
+          }
+        }
+      }
+
+      // 2. GHI DỮ LIỆU CỦA BÁO CÁO SALE SỈ (Đã bỏ cột điểm đến chăm sóc khỏi file dữ liệu)
+      if (hasOldVisitedCol) {
+        row.push(
+          new Date(),
+          data.date || "",
+          data.reporter || "",
+          data.newOutlets || "",
+          data.issuesOrProposals || "",
+          "", // Bỏ qua cột cũ
+          data.totalOrders || ""
+        );
+      } else {
+        row.push(
+          new Date(),
+          data.date || "",
+          data.reporter || "",
+          data.newOutlets || "",
+          data.issuesOrProposals || "",
+          data.totalOrders || ""
+        );
+      }
       
       // 15 điểm bán
       if (data.outlets && Array.isArray(data.outlets)) {

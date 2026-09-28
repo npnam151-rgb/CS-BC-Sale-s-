@@ -14,7 +14,6 @@ import {
   SaleSiReportData, 
   DEFAULT_OUTLETS, 
   formatNewOutletsText, 
-  formatVisitedOutletsText, 
   formatTotalOrdersText, 
   formatOutletCellText 
 } from './types';
@@ -56,7 +55,6 @@ export default function App() {
     }
 
     const newOutletsFormatted = formatNewOutletsText(data.newOutletsCount, data.newOutletsList);
-    const visitedOutletsFormatted = formatVisitedOutletsText(data.visitedOutletsCount, data.visitedOutletsList);
     const totalOrdersFormatted = formatTotalOrdersText(data.ordersCount, data.ordersBom30L, data.ordersBom50L, data.ordersKeg1L);
     const outletsFormatted = data.outlets.map(o => formatOutletCellText(o));
 
@@ -66,7 +64,6 @@ export default function App() {
       reporter: data.reporter,
       newOutlets: newOutletsFormatted,
       issuesOrProposals: data.issuesOrProposals,
-      visitedOutlets: visitedOutletsFormatted,
       totalOrders: totalOrdersFormatted,
       outlets: outletsFormatted,
       items: data.outlets.map(o => ({

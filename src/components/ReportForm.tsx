@@ -5,7 +5,6 @@ import {
   DEFAULT_OUTLETS 
 } from '../types';
 import { 
-  Store, 
   Calendar, 
   User, 
   TrendingUp, 
@@ -33,7 +32,11 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
       }
       return outlet;
     });
-    onChange({ ...data, outlets: updatedOutlets });
+
+    onChange({ 
+      ...data, 
+      outlets: updatedOutlets
+    });
   };
 
   const handleClearOutlet = (id: number) => {
@@ -53,18 +56,10 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
       }
       return outlet;
     });
-    onChange({ ...data, outlets: updatedOutlets });
-  };
 
-  // Tự động tổng hợp điểm chăm sóc từ các điểm bán đã nhập tên
-  const handleAutoFillVisitedOutlets = () => {
-    const activeOutlets = data.outlets.filter(o => o.restaurantName.trim().length > 0);
-    const count = activeOutlets.length;
-    const names = activeOutlets.map(o => o.restaurantName.trim()).join(', ');
-    onChange({
-      ...data,
-      visitedOutletsCount: count > 0 ? count.toString() : data.visitedOutletsCount,
-      visitedOutletsList: names || data.visitedOutletsList
+    onChange({ 
+      ...data, 
+      outlets: updatedOutlets
     });
   };
 
@@ -156,15 +151,15 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
           <h2 className="text-base font-bold text-slate-800">2. Chỉ số tổng hợp ngày</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Điểm mở mới */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
-                Điểm mở mới
-              </span>
-            </div>
+        {/* Điểm mở mới */}
+        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+              <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
+              Điểm mở mới
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs text-slate-500 mb-1">Số lượng (SL)</label>
               <input
@@ -175,51 +170,13 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-xs text-slate-500 mb-1">Danh sách tên điểm mở mới</label>
               <textarea
                 rows={2}
                 value={data.newOutletsList}
                 onChange={(e) => onChange({ ...data, newOutletsList: e.target.value })}
                 placeholder="VD: Vân Hồ quán, Minh Khai Quán"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Tổng số điểm đến chăm sóc */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/80 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Store className="w-3.5 h-3.5 text-blue-600" />
-                Tổng số điểm đến chăm sóc
-              </span>
-              <button
-                type="button"
-                onClick={handleAutoFillVisitedOutlets}
-                className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium hover:underline flex items-center gap-1"
-                title="Tự động đếm và lấy tên các điểm bán đã nhập bên dưới"
-              >
-                ⚡ Lấy từ 15 điểm
-              </button>
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Số lượng (SL)</label>
-              <input
-                type="text"
-                value={data.visitedOutletsCount}
-                onChange={(e) => onChange({ ...data, visitedOutletsCount: e.target.value })}
-                placeholder="VD: 5"
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-slate-500 mb-1">Danh sách gồm các điểm</label>
-              <textarea
-                rows={2}
-                value={data.visitedOutletsList}
-                onChange={(e) => onChange({ ...data, visitedOutletsList: e.target.value })}
-                placeholder="VD: Quýt quán, 72 NK, Quán nhỏ, TD MK, TD NT"
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
               />
             </div>
