@@ -33,9 +33,15 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
       return outlet;
     });
 
+    const activeOutlets = updatedOutlets.filter(o => o.restaurantName.trim().length > 0);
+    const autoCount = activeOutlets.length > 0 ? activeOutlets.length.toString() : '';
+    const autoList = activeOutlets.map(o => o.restaurantName.trim()).join(', ');
+
     onChange({ 
       ...data, 
-      outlets: updatedOutlets
+      outlets: updatedOutlets,
+      visitedOutletsCount: autoCount,
+      visitedOutletsList: autoList
     });
   };
 
@@ -57,9 +63,15 @@ export function ReportForm({ data, onChange }: ReportFormProps) {
       return outlet;
     });
 
+    const activeOutlets = updatedOutlets.filter(o => o.restaurantName.trim().length > 0);
+    const autoCount = activeOutlets.length > 0 ? activeOutlets.length.toString() : '';
+    const autoList = activeOutlets.map(o => o.restaurantName.trim()).join(', ');
+
     onChange({ 
       ...data, 
-      outlets: updatedOutlets
+      outlets: updatedOutlets,
+      visitedOutletsCount: autoCount,
+      visitedOutletsList: autoList
     });
   };
 

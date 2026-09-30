@@ -14,6 +14,7 @@ import {
   SaleSiReportData, 
   DEFAULT_OUTLETS, 
   formatNewOutletsText, 
+  formatVisitedOutletsText,
   formatTotalOrdersText, 
   formatOutletCellText 
 } from './types';
@@ -55,6 +56,12 @@ export default function App() {
     }
 
     const newOutletsFormatted = formatNewOutletsText(data.newOutletsCount, data.newOutletsList);
+    // Tự động tổng hợp dữ liệu "Tổng số điểm đến chăm sóc" từ 15 điểm bán để đưa vào Cột F
+    const activeOutlets = data.outlets.filter(o => o.restaurantName.trim().length > 0);
+    const visitedCount = data.visitedOutletsCount || (activeOutlets.length > 0 ? activeOutlets.length.toString() : '');
+    const visitedList = data.visitedOutletsList || activeOutlets.map(o => o.restaurantName.trim()).join(', ');
+    const visitedOutletsFormatted = formatVisitedOutletsText(visitedCount, visitedList);
+
     const totalOrdersFormatted = formatTotalOrdersText(data.ordersCount, data.ordersBom30L, data.ordersBom50L, data.ordersKeg1L);
     const outletsFormatted = data.outlets.map(o => formatOutletCellText(o));
 
@@ -64,8 +71,9 @@ export default function App() {
       reporter: data.reporter,
       newOutlets: newOutletsFormatted,
       issuesOrProposals: data.issuesOrProposals,
-      totalOrders: totalOrdersFormatted,
-      outlets: outletsFormatted,
+      visitedOutlets: visitedOutletsFormatted, // Cột F: Tổng số điểm đến chăm sóc
+      totalOrders: totalOrdersFormatted,       // Cột G: Tổng số đơn đặt hàng
+      outlets: outletsFormatted,              // Cột H -> V: Điểm bán số 1 -> 15
       items: data.outlets.map(o => ({
         id: o.id,
         title: `Điểm bán số ${o.id}`,

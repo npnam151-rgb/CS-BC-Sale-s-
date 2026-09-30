@@ -110,12 +110,13 @@ function doPost(e) {
       // 1. TẠO TIÊU ĐỀ NẾU BẢNG TRỐNG
       if (sheet.getLastRow() === 0) {
         var headersSaleSi = [
-          "Thời gian gửi",
-          "Ngày",
-          "Người báo cáo",
-          "Điểm mở mới",
-          "Phát sinh/ Đề xuất",
-          "Tổng số đơn đặt hàng"
+          "Thời gian gửi",            // Cột A
+          "Ngày",                     // Cột B
+          "Người báo cáo",            // Cột C
+          "Điểm mở mới",              // Cột D
+          "Phát sinh/ Đề xuất",       // Cột E
+          "Tổng số điểm đến chăm sóc", // Cột F
+          "Tổng số đơn đặt hàng"      // Cột G
         ];
         for (var i = 1; i <= 15; i++) {
           headersSaleSi.push("Điểm bán số " + i);
@@ -125,41 +126,18 @@ function doPost(e) {
         sheet.setFrozenRows(1);
       }
       
-      // Kiểm tra nếu sheet cũ từng có cột "Tổng số điểm đến chăm sóc" để điền đúng cột
-      var hasOldVisitedCol = false;
-      if (sheet.getLastRow() > 0) {
-        var existingHeaders = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 10)).getValues()[0];
-        for (var h = 0; h < existingHeaders.length; h++) {
-          if (existingHeaders[h] && existingHeaders[h].toString().indexOf("chăm sóc") !== -1) {
-            hasOldVisitedCol = true;
-            break;
-          }
-        }
-      }
-
-      // 2. GHI DỮ LIỆU CỦA BÁO CÁO SALE SỈ (Đã bỏ cột điểm đến chăm sóc khỏi file dữ liệu)
-      if (hasOldVisitedCol) {
-        row.push(
-          new Date(),
-          data.date || "",
-          data.reporter || "",
-          data.newOutlets || "",
-          data.issuesOrProposals || "",
-          "", // Bỏ qua cột cũ
-          data.totalOrders || ""
-        );
-      } else {
-        row.push(
-          new Date(),
-          data.date || "",
-          data.reporter || "",
-          data.newOutlets || "",
-          data.issuesOrProposals || "",
-          data.totalOrders || ""
-        );
-      }
+      // 2. GHI DỮ LIỆU CỦA BÁO CÁO SALE SỈ (Cột F: Tổng số điểm đến chăm sóc)
+      row.push(
+        new Date(),
+        data.date || "",
+        data.reporter || "",
+        data.newOutlets || "",
+        data.issuesOrProposals || "",
+        data.visitedOutlets || "", // Cột F: Tổng số điểm đến chăm sóc
+        data.totalOrders || ""     // Cột G: Tổng số đơn đặt hàng
+      );
       
-      // 15 điểm bán
+      // 15 điểm bán (Cột H -> V)
       if (data.outlets && Array.isArray(data.outlets)) {
         for (var i = 0; i < 15; i++) {
           row.push(data.outlets[i] !== undefined ? data.outlets[i] : "");
