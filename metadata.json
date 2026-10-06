@@ -1,5 +1,5 @@
 {
-  "name": "CS Báo cáo Sale sỉ",
+  "name": "Báo cáo sale sỉ",
   "description": "Ứng dụng tạo và xuất báo cáo Sale sỉ dạng ảnh, tự động lưu dữ liệu vào Google Sheets (sheet BC sale sỉ).",
   "requestFramePermissions": [],
   "majorCapabilities": [

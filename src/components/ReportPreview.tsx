@@ -1,9 +1,9 @@
 import React, { forwardRef } from 'react';
-import { SaleSiReportData } from '../types';
-import { Store, TrendingUp, Package, AlertCircle } from 'lucide-react';
+import { SingleVisitReportData } from '../types';
+import { Store, Layers, Package, MapPin, MessageSquareQuote, Calendar, User, Clock } from 'lucide-react';
 
 interface ReportPreviewProps {
-  data: SaleSiReportData;
+  data: SingleVisitReportData;
 }
 
 export const ReportPreview = forwardRef<HTMLDivElement, ReportPreviewProps>(
@@ -16,29 +16,25 @@ export const ReportPreview = forwardRef<HTMLDivElement, ReportPreviewProps>(
         })
       : '...';
 
-    // Đếm số điểm bán có nhập tên
-    const activeOutlets = data.outlets.filter((o) => o.restaurantName.trim().length > 0);
+    const isNew = data.outletType === 'Điểm mới';
 
     return (
       <div
         ref={ref}
-        className="bg-white text-slate-900 w-[920px] min-w-[920px] mx-auto p-8 shadow-sm border border-slate-200"
+        className="bg-white text-slate-900 w-[720px] min-w-[720px] mx-auto p-7 shadow-xs border border-slate-200"
         style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
       >
         {/* Header */}
-        <div className="border-b-2 border-indigo-900 pb-5 mb-6">
+        <div className="border-b-2 border-indigo-900 pb-4 mb-5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded">
-                BÁO CÁO HOẠT ĐỘNG KINH DOANH
-              </span>
-              <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900 mt-1.5">
+              <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">
                 BÁO CÁO SALE SỈ
               </h1>
             </div>
             <div className="text-right space-y-1">
               <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
-                Ngày gửi báo cáo
+                Ngày gửi
               </div>
               <div className="text-base font-bold text-slate-900">
                 {formattedDate}
@@ -53,170 +49,122 @@ export const ReportPreview = forwardRef<HTMLDivElement, ReportPreviewProps>(
                 {data.reporter || '(Chưa nhập tên)'}
               </span>
             </div>
-          </div>
-        </div>
-
-        {/* Section 1: 4 Key Metric Blocks */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {/* Block 1: Điểm mở mới */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Điểm mở mới
-              </div>
-              <span className="text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">
-                SL: {data.newOutletsCount || '0'}
+            <div className="flex items-center gap-2">
+              {/* Badge Điểm cũ / Điểm mới */}
+              <span
+                className={`px-3 py-1 text-xs font-extrabold rounded-md border ${
+                  isNew
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-blue-50 text-blue-800 border-blue-300'
+                }`}
+              >
+                {data.outletType}
               </span>
-            </div>
-            <div className="text-sm text-slate-800 font-medium min-h-[42px] whitespace-pre-line leading-relaxed">
-              {data.newOutletsList || (
-                <span className="text-slate-400 italic text-xs">Không có điểm mở mới</span>
-              )}
-            </div>
-          </div>
-
-          {/* Block 2: Tổng số điểm đến chăm sóc */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Store className="w-3.5 h-3.5 text-blue-600" />
-                Tổng số điểm đến chăm sóc
-              </div>
-              <span className="text-xs font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
-                SL: {activeOutlets.length}
-              </span>
-            </div>
-            <div className="text-sm text-slate-800 font-medium min-h-[42px] whitespace-pre-line leading-relaxed">
-              {activeOutlets.length > 0 ? (
-                `Gồm: ${activeOutlets.map(o => o.restaurantName.trim()).join(', ')}`
-              ) : (
-                <span className="text-slate-400 italic text-xs">Chưa có điểm bán nào được ghi nhận</span>
-              )}
-            </div>
-          </div>
-
-          {/* Block 3: Tổng số đơn đặt hàng */}
-          <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                <Package className="w-3.5 h-3.5 text-amber-600" />
-                Tổng số đơn đặt hàng
-              </div>
-              <span className="text-xs font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-md">
-                {data.ordersCount
-                  ? data.ordersCount.toLowerCase().includes('nhà')
-                    ? `SL: ${data.ordersCount}`
-                    : `SL: ${data.ordersCount} nhà`
-                  : 'SL: 0 nhà'}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mt-2 pt-1 border-t border-amber-200/60 text-xs">
-              <div className="bg-white/80 p-1.5 rounded border border-amber-200/80 text-center">
-                <div className="text-slate-500 text-[10px] font-medium">Bom 30L</div>
-                <div className="text-sm font-bold text-slate-900">{data.ordersBom30L || '0'}</div>
-              </div>
-              <div className="bg-white/80 p-1.5 rounded border border-amber-200/80 text-center">
-                <div className="text-slate-500 text-[10px] font-medium">Bom 50L</div>
-                <div className="text-sm font-bold text-slate-900">{data.ordersBom50L || '0'}</div>
-              </div>
-              <div className="bg-white/80 p-1.5 rounded border border-amber-200/80 text-center">
-                <div className="text-slate-500 text-[10px] font-medium">Keg 1L</div>
-                <div className="text-sm font-bold text-slate-900">{data.ordersKeg1L || '0'}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Block 4: Phát sinh / Đề xuất */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 text-indigo-600" />
-              Phát sinh / Đề xuất
-            </div>
-            <div className="text-sm text-slate-800 font-normal min-h-[42px] whitespace-pre-line leading-relaxed">
-              {data.issuesOrProposals || (
-                <span className="text-slate-400 italic text-xs">Không có phát sinh/đề xuất</span>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Section 2: Bảng Chi Tiết 15 Điểm Bán */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-              <span className="w-1.5 h-4 bg-indigo-600 rounded-sm"></span>
-              CHI TIẾT 15 ĐIỂM BÁN (TỒN KHO & ĐIỂM CHĂM SÓC)
-            </h2>
-            <span className="text-xs text-slate-500">
-              Đã ghi nhận: <strong className="text-slate-900">{activeOutlets.length}/15</strong> điểm
-            </span>
+        {/* Thông tin Điểm bán */}
+        <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-5 mb-5 space-y-3">
+          <div className="flex items-start gap-2.5">
+            <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg shrink-0 mt-0.5">
+              <Store className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-0.5">
+                Tên điểm bán
+              </div>
+              <div className="text-xl font-black text-slate-900 leading-tight">
+                {data.restaurantName || '(Chưa nhập tên quán)'}
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-lg border border-slate-300 overflow-hidden">
-            <table className="w-full text-left border-collapse text-xs">
+          {/* Địa chỉ */}
+          <div className="flex items-start gap-2.5 pt-2 border-t border-slate-200/70 text-sm">
+            <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-slate-500 font-medium mr-1.5">Địa chỉ:</span>
+              <span className="font-semibold text-slate-800">
+                {data.address || '(Chưa có địa chỉ)'}
+              </span>
+            </div>
+          </div>
+
+          {/* Đánh giá / Đề xuất */}
+          <div className="flex items-start gap-2.5 pt-2 border-t border-slate-200/70 text-sm">
+            <MessageSquareQuote className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="text-slate-500 font-medium block mb-1">Đánh giá / Đề xuất:</span>
+              <div className="p-3 bg-white rounded-lg border border-slate-200 text-slate-800 font-normal leading-relaxed whitespace-pre-line text-xs">
+                {data.evaluationOrProposal || '(Không có phát sinh/đề xuất nào)'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bảng TỒN KHO & ĐẶT HÀNG (Chuẩn format cột) */}
+        <div className="mb-5">
+          <div className="text-xs font-black uppercase tracking-wider text-slate-800 mb-2 flex items-center gap-1.5">
+            <span className="w-1.5 h-3.5 bg-indigo-600 rounded-xs"></span>
+            TÌNH HÌNH TỒN KHO & ĐƠN ĐẶT HÀNG
+          </div>
+
+          <div className="rounded-xl border border-slate-300 overflow-hidden shadow-2xs">
+            <table className="w-full text-center border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-100 text-slate-800 border-b border-slate-300 font-bold uppercase text-[11px] tracking-wide">
-                  <th className="py-2.5 px-3 text-center w-14 border-r border-slate-300">STT</th>
-                  <th className="py-2.5 px-4 border-r border-slate-300">Tên Nhà Hàng</th>
-                  <th className="py-2.5 px-3 text-center border-r border-slate-300 w-36">Tồn Bom 30L</th>
-                  <th className="py-2.5 px-3 text-center border-r border-slate-300 w-36">Tồn Bom 50L</th>
-                  <th className="py-2.5 px-3 text-center w-36">Tồn Keg 1L</th>
+                  <th colSpan={3} className="py-2 px-3 border-r border-slate-300 bg-blue-100/70 text-blue-900">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-blue-700" />
+                      TỒN KHO
+                    </div>
+                  </th>
+                  <th colSpan={3} className="py-2 px-3 bg-amber-100/70 text-amber-900">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <Package className="w-3.5 h-3.5 text-amber-700" />
+                      ĐẶT HÀNG
+                    </div>
+                  </th>
+                </tr>
+                <tr className="bg-slate-50 text-slate-700 border-b border-slate-300 font-bold text-[11px]">
+                  <th className="py-2 px-2 border-r border-slate-200 bg-blue-50/60">Bom 30L</th>
+                  <th className="py-2 px-2 border-r border-slate-200 bg-blue-50/60">Bom 50L</th>
+                  <th className="py-2 px-2 border-r border-slate-300 bg-blue-50/60">Keg 1L</th>
+                  <th className="py-2 px-2 border-r border-slate-200 bg-amber-50/60">Bom 30L</th>
+                  <th className="py-2 px-2 border-r border-slate-200 bg-amber-50/60">Bom 50L</th>
+                  <th className="py-2 px-2 bg-amber-50/60">Keg 1L</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                {data.outlets.map((outlet) => {
-                  const hasData = outlet.restaurantName.trim().length > 0;
-
-                  return (
-                    <tr
-                      key={outlet.id}
-                      className={
-                        hasData
-                          ? 'bg-white hover:bg-slate-50/70 transition-colors'
-                          : 'bg-slate-50/40 text-slate-400'
-                      }
-                    >
-                      <td className="py-2 px-3 text-center font-bold text-slate-700 border-r border-slate-200">
-                        {outlet.id}
-                      </td>
-                      <td className="py-2 px-4 font-semibold text-slate-900 border-r border-slate-200">
-                        {outlet.restaurantName ? (
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span>{outlet.restaurantName}</span>
-                          </div>
-                        ) : (
-                          <span className="text-slate-300 font-normal italic">Điểm bán số {outlet.id}</span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3 text-center font-bold border-r border-slate-200 text-slate-800">
-                        {outlet.stockBom30L || (hasData ? '0' : '-')}
-                      </td>
-                      <td className="py-2 px-3 text-center font-bold border-r border-slate-200 text-slate-800">
-                        {outlet.stockBom50L || (hasData ? '0' : '-')}
-                      </td>
-                      <td className="py-2 px-3 text-center font-bold text-slate-800">
-                        {outlet.stockKeg1L || (hasData ? '0' : '-')}
-                      </td>
-                    </tr>
-                  );
-                })}
+              <tbody>
+                <tr className="bg-white text-base font-bold">
+                  {/* Tồn kho */}
+                  <td className="py-3 px-2 border-r border-slate-200 text-blue-950">
+                    {data.stockBom30L || '0'}
+                  </td>
+                  <td className="py-3 px-2 border-r border-slate-200 text-blue-950">
+                    {data.stockBom50L || '0'}
+                  </td>
+                  <td className="py-3 px-2 border-r border-slate-300 text-blue-950">
+                    {data.stockKeg1L || '0'}
+                  </td>
+                  {/* Đặt hàng */}
+                  <td className="py-3 px-2 border-r border-slate-200 text-amber-950 bg-amber-50/20">
+                    {data.orderBom30L || '0'}
+                  </td>
+                  <td className="py-3 px-2 border-r border-slate-200 text-amber-950 bg-amber-50/20">
+                    {data.orderBom50L || '0'}
+                  </td>
+                  <td className="py-3 px-2 text-amber-950 bg-amber-50/20">
+                    {data.orderKeg1L || '0'}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="pt-6 border-t border-slate-200 flex justify-end text-xs text-slate-500">
-          <div className="text-center pr-6">
-            <div className="font-semibold text-slate-800">Người lập báo cáo</div>
-            <div className="h-10"></div>
-            <div className="font-bold text-slate-900">
-              {data.reporter || '................................'}
-            </div>
-          </div>
-        </div>
+
       </div>
     );
   }

@@ -108,8 +108,8 @@ export function ImagePreviewModal({
         setIsSharing(false);
       }
     } else {
-      // In Zalo or browsers without Web Share API
-      alert('Trình duyệt Zalo / In-app chặn tính năng chia sẻ tự động.\n\n👉 Bạn hãy chạm và giữ (long-press) vào ảnh bên dưới rồi chọn "Chia sẻ" hoặc "Lưu vào Ảnh" nhé!');
+      // In Zalo or browsers without Web Share API: show copy notice or prompt
+      setShareSuccess(false);
     }
   };
 
