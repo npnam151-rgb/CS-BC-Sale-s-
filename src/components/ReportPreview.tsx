@@ -50,6 +50,11 @@ export const ReportPreview = forwardRef<HTMLDivElement, ReportPreviewProps>(
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {data.visitOrder && (
+                <span className="px-2.5 py-1 text-xs font-bold rounded-md bg-slate-100 text-slate-800 border border-slate-300">
+                  Điểm thứ {data.visitOrder}
+                </span>
+              )}
               {/* Badge Điểm cũ / Điểm mới */}
               <span
                 className={`px-3 py-1 text-xs font-extrabold rounded-md border ${

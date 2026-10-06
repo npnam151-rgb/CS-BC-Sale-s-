@@ -3,7 +3,7 @@ export type OutletType = 'Điểm cũ' | 'Điểm mới';
 export interface SingleVisitReportData {
   date: string;
   reporter: string;
-  visitOrder?: number; // Tùy chọn (nếu cần)
+  visitOrder: string; // Điểm đi thứ mấy trong ngày (1, 2, 3...)
   outletType: OutletType; // Điểm cũ / Điểm mới
   restaurantName: string; // Tên điểm bán
   address: string; // Địa chỉ điểm bán
@@ -17,10 +17,12 @@ export interface SingleVisitReportData {
 }
 
 export const createDefaultVisitReport = (
-  reporter: string = ''
+  reporter: string = '',
+  visitOrder: string = '1'
 ): SingleVisitReportData => ({
   date: new Date().toISOString().split('T')[0],
   reporter,
+  visitOrder,
   outletType: 'Điểm cũ',
   restaurantName: '',
   address: '',
@@ -36,6 +38,7 @@ export const createDefaultVisitReport = (
 export const SAMPLE_VISIT_DATA: SingleVisitReportData = {
   date: new Date().toISOString().split('T')[0],
   reporter: 'Phạm Ngọc Thương',
+  visitOrder: '1',
   outletType: 'Điểm cũ',
   restaurantName: 'Cơm Thảo',
   address: '72 Nguyễn Khang, Cầu Giấy, Hà Nội',

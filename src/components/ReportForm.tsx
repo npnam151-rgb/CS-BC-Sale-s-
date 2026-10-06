@@ -68,7 +68,7 @@ export function ReportForm({ data, onChange, onReset }: ReportFormProps) {
           <h2 className="text-sm font-bold text-slate-800">1. Thông tin chung</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1.5">
               Người báo cáo <span className="text-rose-500">*</span>
@@ -80,7 +80,7 @@ export function ReportForm({ data, onChange, onReset }: ReportFormProps) {
               placeholder="VD: Phạm Ngọc Thương, Nam..."
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-semibold transition-all"
             />
-            <span className="text-[10px] text-slate-400 mt-1 block">Tự động ghi nhớ cho các lần nhập sau</span>
+            <span className="text-[10px] text-slate-400 mt-1 block">Tự động ghi nhớ</span>
           </div>
 
           <div>
@@ -93,6 +93,21 @@ export function ReportForm({ data, onChange, onReset }: ReportFormProps) {
               onChange={(e) => onChange({ ...data, date: e.target.value })}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-medium transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+              Điểm đi thứ mấy trong ngày <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={data.visitOrder}
+              onChange={(e) => onChange({ ...data, visitOrder: e.target.value })}
+              placeholder="VD: 1, 2, 3..."
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-center transition-all"
+            />
+            <span className="text-[10px] text-slate-400 mt-1 block">VD: 1, 2, 3... (tự tăng khi chuyển điểm)</span>
           </div>
         </div>
 

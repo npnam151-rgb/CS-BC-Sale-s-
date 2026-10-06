@@ -53,6 +53,7 @@ function doPost(e) {
             "Thời gian gửi",
             "Ngày",
             "Người báo cáo",
+            "Điểm thứ mấy đi trong ngày",
             "Điểm cũ/ Điểm mới",
             "Tên điểm bán",
             "Địa chỉ điểm bán",
@@ -61,67 +62,53 @@ function doPost(e) {
             "ĐẶT HÀNG", "", ""
           ];
           var headerRow2 = [
-            "", "", "", "", "", "", "",
+            "", "", "", "", "", "", "", "",
             "Bom 30L", "Bom 50L", "Keg1L",
             "Bom 30L", "Bom 50L", "Keg1L"
           ];
           sheet.appendRow(headerRow1);
           sheet.appendRow(headerRow2);
-          for (var c = 1; c <= 7; c++) {
+          for (var c = 1; c <= 8; c++) {
             sheet.getRange(1, c, 2, 1).merge();
           }
-          sheet.getRange(1, 8, 1, 3).merge();
-          sheet.getRange(1, 11, 1, 3).merge();
-          sheet.getRange(1, 1, 2, 13)
+          sheet.getRange(1, 9, 1, 3).merge();
+          sheet.getRange(1, 12, 1, 3).merge();
+          sheet.getRange(1, 1, 2, 14)
             .setFontWeight("bold")
             .setBackground("#f3f4f6")
             .setHorizontalAlignment("center")
             .setVerticalAlignment("middle");
           sheet.setFrozenRows(2);
+        } else if (sheet.getLastRow() >= 2) {
+          // Tự động kiểm tra nếu sheet cũ đang thiếu cột "Điểm thứ mấy đi trong ngày" (ở cột 4 đang là "Điểm cũ/ Điểm mới")
+          var firstRowCol4 = sheet.getRange(1, 4).getValue();
+          if (firstRowCol4 && firstRowCol4.toString().indexOf("Điểm cũ") !== -1) {
+            sheet.insertColumnAfter(3);
+            sheet.getRange(1, 4, 2, 1).merge().setValue("Điểm thứ mấy đi trong ngày");
+            sheet.getRange(1, 4, 2, 1)
+              .setFontWeight("bold")
+              .setBackground("#f3f4f6")
+              .setHorizontalAlignment("center")
+              .setVerticalAlignment("middle");
+          }
         }
 
-        // Kiểm tra xem sheet 1 có cột "Điểm thứ mấy đi trong ngày" ở cột 4 hay không để ghi đúng cột
-        var firstRowCol4 = sheet.getRange(1, 4).getValue();
-        var secondRowCol4 = sheet.getLastRow() >= 2 ? sheet.getRange(2, 4).getValue() : "";
-        var hasVisitOrderCol1 = (
-          (firstRowCol4 && firstRowCol4.toString().indexOf("Điểm thứ") !== -1) ||
-          (secondRowCol4 && secondRowCol4.toString().indexOf("Điểm thứ") !== -1)
+        row.push(
+          new Date(),
+          data.date || "",
+          data.reporter || "",
+          data.visitOrder || "",
+          data.outletType || "Điểm cũ",
+          data.restaurantName || "",
+          data.address || "",
+          data.evaluationOrProposal || "",
+          data.stockBom30L || "",
+          data.stockBom50L || "",
+          data.stockKeg1L || "",
+          data.orderBom30L || "",
+          data.orderBom50L || "",
+          data.orderKeg1L || ""
         );
-
-        if (hasVisitOrderCol1) {
-          row.push(
-            new Date(),
-            data.date || "",
-            data.reporter || "",
-            data.visitOrder || "",
-            data.outletType || "Điểm cũ",
-            data.restaurantName || "",
-            data.address || "",
-            data.evaluationOrProposal || "",
-            data.stockBom30L || "",
-            data.stockBom50L || "",
-            data.stockKeg1L || "",
-            data.orderBom30L || "",
-            data.orderBom50L || "",
-            data.orderKeg1L || ""
-          );
-        } else {
-          row.push(
-            new Date(),
-            data.date || "",
-            data.reporter || "",
-            data.outletType || "Điểm cũ",
-            data.restaurantName || "",
-            data.address || "",
-            data.evaluationOrProposal || "",
-            data.stockBom30L || "",
-            data.stockBom50L || "",
-            data.stockKeg1L || "",
-            data.orderBom30L || "",
-            data.orderBom50L || "",
-            data.orderKeg1L || ""
-          );
-        }
 
         // --- ĐỒNG THỜI GHI VÀO FILE THỨ 2 (NẾU CÓ CẤU HÌNH SECOND_SPREADSHEET_ID) ---
         if (typeof SECOND_SPREADSHEET_ID !== "undefined" && SECOND_SPREADSHEET_ID && SECOND_SPREADSHEET_ID.trim() !== "") {

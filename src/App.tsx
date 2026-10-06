@@ -42,7 +42,7 @@ export default function App() {
   // Reset toàn bộ thông tin điểm để nhập lại từ đầu hoặc nhập điểm khác
   const handleResetForm = () => {
     setReportData({
-      ...createDefaultVisitReport(reportData.reporter),
+      ...createDefaultVisitReport(reportData.reporter, reportData.visitOrder || '1'),
       date: reportData.date,
     });
     setExportSuccess(false);
@@ -50,8 +50,11 @@ export default function App() {
 
   // Chuyển sang điểm tiếp theo sau khi báo cáo xong
   const handleNextPoint = () => {
+    const currentNum = parseInt(reportData.visitOrder || '1', 10);
+    const nextOrder = !isNaN(currentNum) ? String(currentNum + 1) : '2';
+
     setReportData({
-      ...createDefaultVisitReport(reportData.reporter),
+      ...createDefaultVisitReport(reportData.reporter, nextOrder),
       date: reportData.date,
     });
     setExportSuccess(false);
@@ -63,6 +66,7 @@ export default function App() {
       sheetName: "BC sale sỉ",
       date: data.date,
       reporter: data.reporter,
+      visitOrder: data.visitOrder ? String(data.visitOrder).trim() : '1',
       outletType: data.outletType || 'Điểm cũ',
       restaurantName: data.restaurantName ? data.restaurantName.trim() : '',
       address: data.address ? data.address.trim() : '',
@@ -180,7 +184,8 @@ export default function App() {
 
       const dateStr = reportData.date || new Date().toISOString().split('T')[0];
       const cleanName = reportData.restaurantName ? reportData.restaurantName.trim().replace(/\s+/g, '_') : 'ChuaDatTen';
-      const fileName = `BaoCao_SaleSi_${cleanName}_${dateStr}.png`;
+      const orderPrefix = reportData.visitOrder ? `Diem${reportData.visitOrder}_` : '';
+      const fileName = `BaoCao_SaleSi_${orderPrefix}${cleanName}_${dateStr}.png`;
 
       setModalImageUrl(dataUrl);
       setModalFileName(fileName);
@@ -220,7 +225,8 @@ export default function App() {
 
       const dateStr = reportData.date || new Date().toISOString().split('T')[0];
       const cleanName = reportData.restaurantName.trim().replace(/\s+/g, '_');
-      const fileName = `BaoCao_SaleSi_${cleanName}_${dateStr}.png`;
+      const orderPrefix = reportData.visitOrder ? `Diem${reportData.visitOrder}_` : '';
+      const fileName = `BaoCao_SaleSi_${orderPrefix}${cleanName}_${dateStr}.png`;
 
       setModalImageUrl(dataUrl);
       setModalFileName(fileName);
