@@ -4,10 +4,7 @@ import {
   Download, 
   CheckCircle2, 
   AlertCircle,
-  Eye,
-  Smartphone,
   ArrowRight,
-  Sparkles,
   Store
 } from 'lucide-react';
 import { ReportForm } from './components/ReportForm';
@@ -173,31 +170,7 @@ export default function App() {
     return null;
   };
 
-  // Mở Popup ảnh để chạm giữ lưu vào điện thoại
-  const handleOpenModalPreview = async () => {
-    if (!previewRef.current) return;
-    try {
-      setIsExporting(true);
-      setValidationError(null);
-      const dataUrl = await generateReportImageDataUrl();
-      if (!dataUrl) throw new Error('Không thể tạo ảnh');
 
-      const dateStr = reportData.date || new Date().toISOString().split('T')[0];
-      const cleanName = reportData.restaurantName ? reportData.restaurantName.trim().replace(/\s+/g, '_') : 'ChuaDatTen';
-      const orderPrefix = reportData.visitOrder ? `Diem${reportData.visitOrder}_` : '';
-      const fileName = `BaoCao_SaleSi_${orderPrefix}${cleanName}_${dateStr}.png`;
-
-      setModalImageUrl(dataUrl);
-      setModalFileName(fileName);
-      setIsBlockedWarning(false);
-      setIsModalOpen(true);
-    } catch (err) {
-      console.error('Failed to generate image preview modal', err);
-      setValidationError('Không thể tạo ảnh xem trước. Vui lòng kiểm tra lại trình duyệt.');
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   const handleExportImage = async () => {
     // Nếu chưa nhập tên điểm bán: nhắc nhở trực tiếp trên giao diện và focus vào ô nhập
@@ -262,7 +235,7 @@ export default function App() {
 
     } catch (err) {
       console.error('Failed to export image', err);
-      setValidationError('Có lỗi xảy ra khi tạo ảnh. Vui lòng bấm "Xem ảnh phiếu" ở góc trên.');
+      setValidationError('Có lỗi xảy ra khi tạo ảnh. Vui lòng bấm thử lại.');
     } finally {
       setIsExporting(false);
     }
@@ -290,17 +263,6 @@ export default function App() {
             
             <div className="flex items-center gap-2">
               <button
-                id="header-preview-modal-button"
-                onClick={handleOpenModalPreview}
-                disabled={isExporting}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
-                title="Mở popup ảnh để chạm và giữ lưu vào điện thoại"
-              >
-                <Eye className="w-4 h-4 text-indigo-600" />
-                <span>Xem ảnh phiếu</span>
-              </button>
-
-              <button
                 id="header-export-button"
                 onClick={handleExportImage}
                 disabled={isExporting}
@@ -309,12 +271,12 @@ export default function App() {
                 {isExporting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Đang gửi...</span>
+                    <span>Đang xuất...</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-4 h-4" />
-                    <span>Gửi & Xuất ảnh</span>
+                    <span>Xuất báo cáo</span>
                   </>
                 )}
               </button>
@@ -374,16 +336,6 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              {modalImageUrl && (
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold rounded-lg border border-slate-300 shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Xem lại ảnh</span>
-                </button>
-              )}
               <button
                 type="button"
                 onClick={handleNextPoint}
@@ -413,19 +365,6 @@ export default function App() {
                 <h2 className="text-sm font-bold text-slate-800">Ảnh phiếu báo cáo</h2>
                 <p className="text-xs text-slate-500">Mẫu ảnh lưu cho điểm này</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  id="preview-section-modal-button"
-                  type="button"
-                  onClick={handleOpenModalPreview}
-                  disabled={isExporting}
-                  className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-md border border-slate-300 shadow-2xs transition-colors"
-                  title="Mở ảnh dạng Popup để chạm giữ lưu vào máy"
-                >
-                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Mở popup</span>
-                </button>
-              </div>
             </div>
             
             <div className="bg-slate-200/90 p-2 sm:p-3 rounded-xl overflow-x-auto shadow-inner border border-slate-300">
@@ -441,33 +380,22 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] z-30 flex items-center gap-2">
-        <button
-          id="mobile-preview-modal-button"
-          type="button"
-          onClick={handleOpenModalPreview}
-          disabled={isExporting}
-          className="flex-1 flex justify-center items-center gap-1.5 px-3 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl transition-colors disabled:opacity-50"
-        >
-          <Eye className="w-4 h-4 text-indigo-600" />
-          <span>Xem ảnh</span>
-        </button>
-
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.05)] z-30">
         <button
           id="mobile-export-button"
           onClick={handleExportImage}
           disabled={isExporting}
-          className="flex-2 flex justify-center items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-xs transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full flex justify-center items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-xs transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
         >
           {isExporting ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Đang gửi...</span>
+              <span>Đang xuất...</span>
             </>
           ) : (
             <>
               <Download className="w-4 h-4" />
-              <span>Gửi & Xuất ảnh</span>
+              <span>Xuất báo cáo</span>
             </>
           )}
         </button>
